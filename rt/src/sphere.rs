@@ -1,4 +1,4 @@
-use crate::{ vector3::{ Point3, dot }, hittable::Hittable };
+use crate::{ vector3::{ Point3, dot }, hittable::Hittable, interval::Interval };
 
 pub struct Sphere {
     centre: Point3,
@@ -15,8 +15,7 @@ impl Hittable for Sphere {
     fn hit(
         &self,
         r: &crate::ray::Ray,
-        ray_tmin: f64,
-        ray_tmax: f64,
+        ray_t: Interval,
         rec: &mut crate::hittable::HitRecord
     ) -> bool {
         //The following is a simplified quadratic formula
@@ -33,9 +32,9 @@ impl Hittable for Sphere {
 
         // Find the nearest root that lies in the acceptable range.
         let mut root = (-half_b - sqrtd) / a;
-        if root <= ray_tmin || ray_tmax <= root {
+        if !ray_t.surrounds(root) {
             root = (-half_b + sqrtd) / a;
-            if root <= ray_tmin || ray_tmax <= root {
+            if !ray_t.surrounds(root) {
                 return false;
             }
         }
