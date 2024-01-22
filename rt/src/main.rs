@@ -1,30 +1,47 @@
 mod vector3;
 mod colour;
 mod ray;
+mod hittable;
+mod sphere;
+mod hittable_list;
+mod rtweekend;
+mod interval;
 
+use std::f64::INFINITY;
 use std::fs::File;
 use std::io::{ Write, self };
 use std::ops::Mul;
+use std::rc::Rc;
 
 use colour::{ Colour, write_colour };
 
+use hittable::{ HitRecord, Hittable };
 use vector3::{ Vector3, Point3, unit_vector };
 
+use crate::hittable_list::HittableList;
 use crate::ray::Ray;
+use crate::sphere::Sphere;
 
 fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
 
     // Calculate the image height, and ensure that it's at least 1.
-    let mut image_height = ((image_width as f64) / aspect_ratio) as i32;
+    let mut image_height = ((image_width as f64) / aspect_ratio).round() as i32;
     image_height = image_height.max(1);
+
+    // World
+
+    let mut world = HittableList::new();
+
+    world.add(Rc::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Rc::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
 
     // Camera
 
     let focal_length = 1.0;
     let viewport_height = 2.0;
-    let viewport_width = viewport_height * ((image_width / image_height) as f64);
+    let viewport_width = viewport_height * ((image_width as f64) / (image_height as f64));
     let camera_center = Point3::new(0.0, 0.0, 0.0);
 
     // Calculate the vectors across the horizontal and down the vertical viewport edges.
@@ -57,7 +74,7 @@ fn main() {
             let ray_direction = pixel_center - camera_center;
             let r = Ray::new(camera_center, ray_direction);
 
-            let pixel_colour = ray_color(&r);
+            let pixel_colour = ray_color(&r, &world);
 
             write_colour(&mut image_file, pixel_colour);
         }
@@ -66,7 +83,12 @@ fn main() {
     println!("\rDone.                 \n");
 }
 
-fn ray_color(r: &Ray) -> Colour {
+fn ray_color(r: &Ray, world: &dyn Hittable) -> Colour {
+    let mut rec = HitRecord::default();
+    if world.hit(r, 0.0, INFINITY, &mut rec) {
+        return 0.5 * (rec.normal + Colour::new(1.0, 1.0, 1.0));
+    }
+
     let unit_direction = unit_vector(r.direction());
     let a = 0.5 * (unit_direction.y() + 1.0);
     return (1.0 - a) * Colour::new(1.0, 1.0, 1.0) + a * Colour::new(0.5, 0.7, 1.0);

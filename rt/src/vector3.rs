@@ -10,6 +10,10 @@ impl Vector3 {
         Vector3 { e: [e0, e1, e2] }
     }
 
+    pub fn default() -> Self {
+        Vector3 { e: [0.0, 0.0, 0.0] }
+    }
+
     pub fn x(&self) -> f64 {
         self.e[0]
     }
