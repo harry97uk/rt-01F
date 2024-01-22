@@ -1,5 +1,7 @@
 use std::ops::{ AddAssign, MulAssign, DivAssign, Add, Sub, Mul, Div, Neg };
 
+use crate::rtweekend::{ random_f64, random_f64_range };
+
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct Vector3 {
     e: [f64; 3],
@@ -32,6 +34,18 @@ impl Vector3 {
 
     pub fn length_squared(&self) -> f64 {
         return self.e[0] * self.e[0] + self.e[1] * self.e[1] + self.e[2] * self.e[2];
+    }
+
+    pub fn random() -> Vector3 {
+        return Vector3::new(random_f64(), random_f64(), random_f64());
+    }
+
+    pub fn random_range(min: f64, max: f64) -> Vector3 {
+        return Vector3::new(
+            random_f64_range(min, max),
+            random_f64_range(min, max),
+            random_f64_range(min, max)
+        );
     }
 }
 
@@ -151,4 +165,28 @@ pub fn cross(u: Vector3, v: Vector3) -> Vector3 {
 
 pub fn unit_vector(v: Vector3) -> Vector3 {
     v / v.length()
+}
+
+pub fn random_in_unit_sphere() -> Vector3 {
+    loop {
+        let p = Vector3::random_range(-1.0, 1.0);
+        if p.length_squared() < 1.0 {
+            return p;
+        }
+    }
+}
+
+pub fn random_unit_vector() -> Vector3 {
+    return unit_vector(random_in_unit_sphere());
+}
+
+pub fn random_on_hemisphere(normal: Vector3) -> Vector3 {
+    let on_unit_sphere = random_unit_vector();
+    if
+        dot(on_unit_sphere, normal) > 0.0 // In the same hemisphere as the normal
+    {
+        return on_unit_sphere;
+    } else {
+        return -on_unit_sphere;
+    }
 }

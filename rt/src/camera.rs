@@ -1,11 +1,11 @@
-use std::{ f64::INFINITY, fs::File, io::{ self, Write }, ops::Mul };
+use std::{ f64::INFINITY, fs::File, io::{ self, Write } };
 
 use crate::{
     hittable::{ Hittable, HitRecord },
     ray::Ray,
     colour::{ Colour, write_colour },
     interval::Interval,
-    vector3::{ unit_vector, Point3, Vector3 },
+    vector3::{ unit_vector, Point3, Vector3, random_on_hemisphere, random_unit_vector },
     rtweekend::random_f64,
 };
 
@@ -13,6 +13,7 @@ pub struct Camera {
     pub aspect_ratio: f64, // Ratio of image width over height
     pub image_width: i32, // Rendered image width in pixel count
     pub samples_per_pixel: i32, // Count of random samples for each pixel
+    pub max_depth: i32, // Maximum number of ray bounces into scene
     image_height: i32, // Rendered image height
     centre: Point3, // camera centre
     pixel00_loc: Point3, // Location of pixel 0,0
@@ -26,6 +27,7 @@ impl Camera {
             aspect_ratio: 0.0,
             image_width: 0,
             samples_per_pixel: 10,
+            max_depth: 10,
             image_height: 0,
             centre: Point3::default(),
             pixel00_loc: Point3::default(),
@@ -55,7 +57,7 @@ impl Camera {
                 let mut pixel_colour = Colour::default();
                 for _ in 0..self.samples_per_pixel {
                     let r = self.get_ray(i, j);
-                    pixel_colour += self.ray_colour(&r, world);
+                    pixel_colour += self.ray_colour(&r, self.max_depth, world);
                 }
                 write_colour(&mut image_file, pixel_colour, self.samples_per_pixel);
             }
@@ -114,11 +116,17 @@ impl Camera {
         return px * self.pixel_delta_u + py * self.pixel_delta_v;
     }
 
-    fn ray_colour(&self, r: &Ray, world: &dyn Hittable) -> Colour {
+    fn ray_colour(&self, r: &Ray, depth: i32, world: &dyn Hittable) -> Colour {
         let mut rec = HitRecord::default();
 
-        if world.hit(r, Interval::new(0.0, INFINITY), &mut rec) {
-            return 0.5 * (rec.normal + Colour::new(1.0, 1.0, 1.0));
+        // If we've exceeded the ray bounce limit, no more light is gathered.
+        if depth <= 0 {
+            return Colour::default();
+        }
+
+        if world.hit(r, Interval::new(0.001, INFINITY), &mut rec) {
+            let direction = rec.normal + random_unit_vector();
+            return 0.5 * self.ray_colour(&Ray::new(rec.p, direction), depth - 1, world);
         }
 
         let unit_direction = unit_vector(r.direction());
