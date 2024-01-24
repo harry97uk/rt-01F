@@ -1,4 +1,8 @@
+use std::rc::Rc;
+
 use crate::Ray;
+use crate::colour::Colour;
+use crate::material::{ Material, Lambertian };
 use crate::vector3::{ Point3, Vector3, dot };
 use crate::interval::Interval;
 
@@ -6,17 +10,24 @@ pub trait Hittable {
     fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
 }
 
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
+#[derive(Clone)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vector3,
+    pub mat: Rc<dyn Material>,
     pub t: f64,
     pub front_face: bool,
 }
 
 impl HitRecord {
     pub fn default() -> Self {
-        HitRecord { p: Point3::default(), normal: Vector3::default(), t: 0.0, front_face: false }
+        HitRecord {
+            p: Point3::default(),
+            normal: Vector3::default(),
+            mat: Rc::new(Lambertian::new(Colour::default())),
+            t: 0.0,
+            front_face: false,
+        }
     }
 
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: &Vector3) {
