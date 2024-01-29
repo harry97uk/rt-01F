@@ -20,3 +20,8 @@ pub fn random_f64_range(min: f64, max: f64) -> f64 {
     // Returns a random real in [min,max).
     return min + (max - min) * random_f64();
 }
+
+pub fn random_int(min: i32, max: i32) -> i32 {
+    // Returns a random integer in [min,max].
+    return random_f64_range(min as f64, (max as f64) + 1.0) as i32;
+}

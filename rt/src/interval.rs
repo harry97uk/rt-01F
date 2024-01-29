@@ -11,6 +11,10 @@ impl Interval {
         Self { min: _min, max: _max }
     }
 
+    pub fn from_intervals(a: Interval, b: Interval) -> Self {
+        Interval { min: f64::min(a.min, b.min), max: f64::max(a.max, b.max) }
+    }
+
     pub fn empty() -> Self {
         Self { min: INFINITY, max: NEG_INFINITY }
     }
@@ -35,6 +39,15 @@ impl Interval {
             return self.max;
         }
         return x;
+    }
+
+    pub fn size(&self) -> f64 {
+        return self.max - self.min;
+    }
+
+    pub fn expand(&self, delta: f64) -> Interval {
+        let padding = delta / 2.0;
+        return Interval::new(self.min - padding, self.max + padding);
     }
 }
 

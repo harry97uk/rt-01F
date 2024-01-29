@@ -18,6 +18,7 @@ pub struct Camera {
     pub lookfrom: Point3, // Point camera is looking from
     pub lookat: Point3, // Point camera is looking at
     pub vup: Vector3, // Camera-relative "up" direction
+    pub brightness: f64,
 
     image_height: i32, // Rendered image height
     centre: Point3, // camera centre
@@ -48,6 +49,7 @@ impl Camera {
             u: Vector3::default(),
             v: Vector3::default(),
             w: Vector3::default(),
+            brightness: 1.0,
         }
     }
     pub fn render(&mut self, world: &dyn Hittable) {
@@ -154,6 +156,6 @@ impl Camera {
 
         let unit_direction = unit_vector(r.direction());
         let a = 0.5 * (unit_direction.y() + 1.0);
-        return (1.0 - a) * Colour::new(1.0, 1.0, 1.0) + a * Colour::new(0.5, 0.7, 1.0);
+        return (self.brightness - a) * Colour::new(1.0, 1.0, 1.0) + a * Colour::new(0.5, 0.7, 1.0);
     }
 }

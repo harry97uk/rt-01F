@@ -1,18 +1,20 @@
-use std::rc::Rc;
+use std::{ rc::Rc, ops::{ DerefMut, Deref } };
 
-use crate::{ hittable::{ Hittable, HitRecord }, interval::Interval };
+use crate::{ hittable::{ Hittable, HitRecord }, interval::Interval, aabb::Aabb };
 
 pub struct HittableList {
     pub objects: Vec<Rc<dyn Hittable>>,
+    bbox: Aabb,
 }
 
 impl<'a> HittableList {
     pub fn new() -> Self {
-        HittableList { objects: vec![] }
+        HittableList { objects: vec![], bbox: Aabb::default() }
     }
 
     pub fn from(object: Rc<dyn Hittable>) -> Self {
-        HittableList { objects: [object].to_vec() }
+        let bbox = Aabb::from_boxes(Aabb::default(), object.bounding_box());
+        HittableList { objects: [object].to_vec(), bbox }
     }
 
     pub fn clear(&mut self) {
@@ -20,6 +22,7 @@ impl<'a> HittableList {
     }
 
     pub fn add(&mut self, object: Rc<dyn Hittable>) {
+        self.bbox = Aabb::from_boxes(self.bbox, object.bounding_box());
         self.objects.push(object);
     }
 }
@@ -37,5 +40,9 @@ impl<'a> Hittable for HittableList {
         }
 
         return hit_anything;
+    }
+
+    fn bounding_box(&self) -> Aabb {
+        return self.bbox;
     }
 }

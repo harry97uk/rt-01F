@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
 use crate::Ray;
+use crate::aabb::Aabb;
 use crate::colour::Colour;
 use crate::material::{ Material, Lambertian };
 use crate::vector3::{ Point3, Vector3, dot };
@@ -8,6 +9,8 @@ use crate::interval::Interval;
 
 pub trait Hittable {
     fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
+
+    fn bounding_box(&self) -> Aabb;
 }
 
 #[derive(Clone)]
@@ -16,6 +19,8 @@ pub struct HitRecord {
     pub normal: Vector3,
     pub mat: Rc<dyn Material>,
     pub t: f64,
+    pub u: f64,
+    pub v: f64,
     pub front_face: bool,
 }
 
@@ -27,6 +32,8 @@ impl HitRecord {
             mat: Rc::new(Lambertian::new(Colour::default())),
             t: 0.0,
             front_face: false,
+            u: 0.0,
+            v: 0.0,
         }
     }
 

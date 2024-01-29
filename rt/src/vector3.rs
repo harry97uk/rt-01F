@@ -28,6 +28,10 @@ impl Vector3 {
         self.e[2]
     }
 
+    pub fn index(&self, i: usize) -> f64 {
+        self.e[i]
+    }
+
     pub fn length(&self) -> f64 {
         return self.length_squared().sqrt();
     }
