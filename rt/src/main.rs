@@ -12,6 +12,7 @@ mod material;
 mod quad;
 mod aabb;
 mod bvh;
+mod cylinder;
 
 use std::f64::consts::PI;
 use std::rc::Rc;
@@ -20,6 +21,7 @@ use bvh::BvhNode;
 use camera::Camera;
 
 use colour::Colour;
+use cylinder::Cylinder;
 use material::{ Lambertian, Metal };
 use quad::{ Plane, cuboid };
 use vector3::{ Point3, Vector3 };
@@ -97,9 +99,25 @@ fn main() {
     let material_right = Rc::new(Metal::new(Colour::new(0.8, 0.6, 0.2)));
 
     world.add(Rc::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, material_ground)));
-    world.add(cuboid(Point3::new(0.0, 0.0, -1.0), Point3::new(0.5, 0.5, -0.5), material_center));
-    world.add(Rc::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, material_left)));
-    world.add(Rc::new(Sphere::new(Point3::new(1.0, 0.0, -1.0), 0.5, material_right)));
+    //world.add(cuboid(Point3::new(0.0, 0.0, -1.0), Point3::new(0.5, 0.5, -0.5), material_center));
+    world.add(Rc::new(Sphere::new(Point3::new(-2.0, 0.0, -1.0), 0.5, material_left)));
+    world.add(Rc::new(Sphere::new(Point3::new(2.0, 0.0, -1.0), 0.5, material_right)));
+
+    // Create a cylinder
+    let cylinder_center = Point3::new(0.0, 1.0, -5.0);
+    let cylinder_height = 1.0;
+    let cylinder_radius = 0.6;
+    let cylinder_material = Rc::new(Lambertian::new(Colour::new(0.8, 0.0, 0.0))); // Example material, replace with actual material type
+
+    let cylinder = Cylinder::new(
+        cylinder_center,
+        cylinder_radius,
+        cylinder_height,
+        cylinder_material
+    );
+
+    // Add the cylinder to the world
+    world.add(Rc::new(cylinder));
 
     //world = HittableList::from(Rc::new(BvhNode::from_list(world)));
 
@@ -120,7 +138,7 @@ fn main() {
     cam.max_depth = 50;
 
     cam.vfov = 20.0;
-    cam.lookfrom = Point3::new(0.0, 10.0, 9.0);
+    cam.lookfrom = Point3::new(2.0, 3.0, -9.0);
     cam.lookat = Point3::new(0.0, 0.0, 0.0);
     cam.vup = Vector3::new(0.0, 1.0, 0.0);
 
