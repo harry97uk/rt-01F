@@ -1,4 +1,4 @@
-use std::{ rc::Rc, cell::RefCell };
+use std::{ rc::Rc };
 
 use crate::{
     vector3::{ Point3, Vector3, cross, unit_vector, dot },

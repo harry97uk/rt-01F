@@ -1,4 +1,3 @@
-#![recursion_limit = "2048"]
 mod vector3;
 mod colour;
 mod ray;
@@ -13,136 +12,63 @@ mod quad;
 mod aabb;
 mod bvh;
 mod cylinder;
+mod helper;
 
-use std::f64::consts::PI;
-use std::rc::Rc;
+use std::collections::HashMap;
 
-use bvh::BvhNode;
 use camera::Camera;
 
-use colour::Colour;
-use cylinder::Cylinder;
-use material::{ Lambertian, Metal };
-use quad::{ Plane, cuboid };
-use vector3::{ Point3, Vector3 };
+use helper::{ extract_materials, extract_objects, get_nested_yaml_value };
+use serde_yaml::Value;
 
 use crate::hittable_list::HittableList;
 use crate::ray::Ray;
-use crate::sphere::Sphere;
 
 fn main() {
     // World
     let mut world = HittableList::new();
 
-    // Materials
-    // let left_red = Rc::new(Lambertian::new(Colour::new(1.0, 0.2, 0.2)));
-    // let back_green = Rc::new(Lambertian::new(Colour::new(0.2, 1.0, 0.2)));
-    // let right_blue = Rc::new(Lambertian::new(Colour::new(0.2, 0.2, 1.0)));
-    // let upper_orange = Rc::new(Lambertian::new(Colour::new(1.0, 0.5, 0.0)));
-    // let lower_teal = Rc::new(Lambertian::new(Colour::new(0.2, 0.8, 0.8)));
+    let yaml_content = std::fs
+        ::read_to_string("/Users/harrygardiner/rt-01F/rt/config.yaml")
+        .unwrap();
+    let yaml_value: Value = serde_yaml::from_str(&yaml_content).unwrap();
+    let mut materials = HashMap::new();
 
-    // // Quads
-    // world.add(
-    //     Rc::new(
-    //         Plane::new(
-    //             Point3::new(-3.0, -2.0, 5.0),
-    //             Vector3::new(0.0, 0.0, -4.0),
-    //             Vector3::new(0.0, 4.0, 0.0),
-    //             left_red
-    //         )
-    //     )
-    // );
-    // world.add(
-    //     Rc::new(
-    //         Plane::new(
-    //             Point3::new(-2.0, -2.0, 0.0),
-    //             Vector3::new(4.0, 0.0, 0.0),
-    //             Vector3::new(0.0, 4.0, 0.0),
-    //             back_green
-    //         )
-    //     )
-    // );
-    // world.add(
-    //     Rc::new(
-    //         Plane::new(
-    //             Point3::new(3.0, -2.0, 1.0),
-    //             Vector3::new(0.0, 0.0, 4.0),
-    //             Vector3::new(0.0, 4.0, 0.0),
-    //             right_blue
-    //         )
-    //     )
-    // );
-    // world.add(
-    //     Rc::new(
-    //         Plane::new(
-    //             Point3::new(-2.0, 3.0, 1.0),
-    //             Vector3::new(4.0, 0.0, 0.0),
-    //             Vector3::new(0.0, 0.0, 4.0),
-    //             upper_orange
-    //         )
-    //     )
-    // );
-    // world.add(
-    //     Rc::new(
-    //         Plane::new(
-    //             Point3::new(-2.0, -3.0, 5.0),
-    //             Vector3::new(4.0, 0.0, 0.0),
-    //             Vector3::new(0.0, 0.0, -4.0),
-    //             lower_teal
-    //         )
-    //     )
-    // );
+    // Extract materials configuration
+    if let Some(materials_value) = yaml_value.get("materials") {
+        materials = extract_materials(materials_value).unwrap();
+    } else {
+        eprintln!("'materials' key not found in the YAML file");
+    }
 
-    let material_ground = Rc::new(Lambertian::new(Colour::new(0.8, 0.8, 0.0)));
-    let material_center = Rc::new(Lambertian::new(Colour::new(0.7, 0.3, 0.3)));
-    let material_left = Rc::new(Metal::new(Colour::new(0.8, 0.8, 0.8)));
-    let material_right = Rc::new(Metal::new(Colour::new(0.8, 0.6, 0.2)));
+    if let Some(object_values) = yaml_value.get("objects") {
+        let objects = extract_objects(object_values, &materials).unwrap();
 
-    world.add(Rc::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, material_ground)));
-    //world.add(cuboid(Point3::new(0.0, 0.0, -1.0), Point3::new(0.5, 0.5, -0.5), material_center));
-    world.add(Rc::new(Sphere::new(Point3::new(-2.0, 0.0, -1.0), 0.5, material_left)));
-    world.add(Rc::new(Sphere::new(Point3::new(2.0, 0.0, -1.0), 0.5, material_right)));
-
-    // Create a cylinder
-    let cylinder_center = Point3::new(0.0, 1.0, -5.0);
-    let cylinder_height = 1.0;
-    let cylinder_radius = 0.6;
-    let cylinder_material = Rc::new(Lambertian::new(Colour::new(0.8, 0.0, 0.0))); // Example material, replace with actual material type
-
-    let cylinder = Cylinder::new(
-        cylinder_center,
-        cylinder_radius,
-        cylinder_height,
-        cylinder_material
-    );
-
-    // Add the cylinder to the world
-    world.add(Rc::new(cylinder));
-
-    //world = HittableList::from(Rc::new(BvhNode::from_list(world)));
-
-    // let r = (PI / 4.0).cos();
-
-    // let material_left = Rc::new(Lambertian::new(Colour::new(0.0, 0.0, 1.0)));
-    // let material_right = Rc::new(Lambertian::new(Colour::new(1.0, 0.0, 0.0)));
-
-    // world.add(Rc::new(Sphere::new(Point3::new(-r, 0.0, -1.0), r, material_left)));
-    // world.add(Rc::new(Sphere::new(Point3::new(r, 0.0, -1.0), r, material_right)));
+        for obj in objects {
+            world.add(obj);
+        }
+    }
 
     // Camera
-    let mut cam: Camera = Camera::new();
+    let mut cam: Camera = match
+        Camera::from_yaml_file("/Users/harrygardiner/rt-01F/rt/config.yaml")
+    {
+        Ok(camera) => {
+            // Use the camera instance as needed
+            //println!("{:?}", camera);
+            camera
+        }
+        Err(err) => {
+            eprintln!("Error: {}", err);
+            Camera::new()
+        }
+    };
 
-    cam.aspect_ratio = 16.0 / 9.0;
-    cam.image_width = 400;
-    cam.samples_per_pixel = 100;
-    cam.max_depth = 50;
+    let filename_value: Option<String> = get_nested_yaml_value(&yaml_value, "filename");
 
-    cam.vfov = 20.0;
-    cam.lookfrom = Point3::new(2.0, 3.0, -9.0);
-    cam.lookat = Point3::new(0.0, 0.0, 0.0);
-    cam.vup = Vector3::new(0.0, 1.0, 0.0);
-
-    cam.brightness = 1.0;
-
-    cam.render(&world)
+    let filename = match filename_value {
+        Some(name) => name,
+        None => "output_image".to_string(), // Provide a default filename if it's not present
+    };
+    cam.render(&world, filename)
 }

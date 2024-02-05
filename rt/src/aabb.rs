@@ -1,4 +1,4 @@
-use crate::{ interval::Interval, vector3::Point3, ray::Ray };
+use crate::{ interval::Interval, vector3::Point3 };
 
 #[derive(Copy, Clone, Debug)]
 pub struct Aabb {
@@ -43,39 +43,39 @@ impl Aabb {
         return Aabb::new(new_x, new_y, new_z);
     }
 
-    pub fn axis(&self, n: i32) -> Interval {
-        if n == 1 {
-            return self.y;
-        }
-        if n == 2 {
-            return self.z;
-        }
-        return self.x;
-    }
+    // pub fn axis(&self, n: i32) -> Interval {
+    //     if n == 1 {
+    //         return self.y;
+    //     }
+    //     if n == 2 {
+    //         return self.z;
+    //     }
+    //     return self.x;
+    // }
 
-    pub fn hit(&self, r: &Ray, mut ray_t: Interval) -> bool {
-        for a in 0..3 {
-            let inv_d = 1.0 / r.direction().index(a);
-            let orig = r.origin().index(a);
+    // pub fn hit(&self, r: &Ray, mut ray_t: Interval) -> bool {
+    //     for a in 0..3 {
+    //         let inv_d = 1.0 / r.direction().index(a);
+    //         let orig = r.origin().index(a);
 
-            let mut t0 = (self.axis(a as i32).min - orig) * inv_d;
-            let mut t1 = (self.axis(a as i32).max - orig) * inv_d;
+    //         let mut t0 = (self.axis(a as i32).min - orig) * inv_d;
+    //         let mut t1 = (self.axis(a as i32).max - orig) * inv_d;
 
-            if inv_d < 0.0 {
-                (t0, t1) = (t1, t0);
-            }
+    //         if inv_d < 0.0 {
+    //             (t0, t1) = (t1, t0);
+    //         }
 
-            if t0 > ray_t.min {
-                ray_t.min = t0;
-            }
-            if t1 < ray_t.max {
-                ray_t.max = t1;
-            }
+    //         if t0 > ray_t.min {
+    //             ray_t.min = t0;
+    //         }
+    //         if t1 < ray_t.max {
+    //             ray_t.max = t1;
+    //         }
 
-            if ray_t.max <= ray_t.min {
-                return false;
-            }
-        }
-        return true;
-    }
+    //         if ray_t.max <= ray_t.min {
+    //             return false;
+    //         }
+    //     }
+    //     return true;
+    // }
 }

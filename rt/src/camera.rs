@@ -1,4 +1,6 @@
 use std::{ f64::INFINITY, fs::File, io::{ self, Write } };
+use serde::Deserialize;
+use serde_yaml::Value;
 
 use crate::{
     hittable::{ Hittable, HitRecord },
@@ -7,8 +9,10 @@ use crate::{
     interval::Interval,
     vector3::{ unit_vector, Point3, Vector3, cross },
     rtweekend::{ random_f64, degrees_to_radians },
+    helper::get_nested_yaml_value,
 };
 
+#[derive(Debug, Deserialize)]
 pub struct Camera {
     pub aspect_ratio: f64, // Ratio of image width over height
     pub image_width: i32, // Rendered image width in pixel count
@@ -41,6 +45,8 @@ impl Camera {
             lookfrom: Point3::new(0.0, 0.0, -1.0),
             lookat: Point3::default(),
             vup: Vector3::new(0.0, 1.0, 0.0),
+            brightness: 1.0,
+
             image_height: 0,
             centre: Point3::default(),
             pixel00_loc: Point3::default(),
@@ -49,13 +55,65 @@ impl Camera {
             u: Vector3::default(),
             v: Vector3::default(),
             w: Vector3::default(),
-            brightness: 1.0,
         }
     }
-    pub fn render(&mut self, world: &dyn Hittable) {
+
+    pub fn from_yaml_file(file_path: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        let yaml_content = std::fs::read_to_string(file_path)?;
+        let yaml_value: Value = serde_yaml::from_str(&yaml_content)?;
+
+        // Access the 'camera' key
+        if let Some(camera_value) = yaml_value.get("camera") {
+            // Access values inside the 'camera' key
+            let aspect_ratio = get_nested_yaml_value(camera_value, "aspect_ratio").unwrap_or(
+                16.0 / 9.0
+            );
+            let image_width = get_nested_yaml_value(camera_value, "image_width").unwrap_or(800);
+            let samples_per_pixel = get_nested_yaml_value(
+                camera_value,
+                "samples_per_pixel"
+            ).unwrap_or(100);
+            let max_depth = get_nested_yaml_value(camera_value, "max_depth").unwrap_or(50);
+            let vfov = get_nested_yaml_value(camera_value, "vfov").unwrap_or(20.0);
+            let lookfrom = get_nested_yaml_value(camera_value, "lookfrom").unwrap_or([
+                1.0, 1.0, 1.0,
+            ]);
+            let lookat = get_nested_yaml_value(camera_value, "lookat").unwrap_or([0.0, 0.0, 0.0]);
+            let vup = get_nested_yaml_value(camera_value, "vup").unwrap_or([0.0, 1.0, 0.0]);
+            let brightness = get_nested_yaml_value(camera_value, "brightness").unwrap_or(1.0);
+
+            // Create a Camera instance using extracted values
+            let camera = Camera {
+                aspect_ratio,
+                image_width,
+                samples_per_pixel,
+                max_depth,
+                vfov,
+                lookfrom: Vector3::new(lookfrom[0], lookfrom[1], lookfrom[2]),
+                lookat: Vector3::new(lookat[0], lookat[1], lookat[2]),
+                vup: Vector3::new(vup[0], vup[1], vup[2]),
+                brightness,
+
+                image_height: 0,
+                centre: Point3::default(),
+                pixel00_loc: Point3::default(),
+                pixel_delta_u: Vector3::default(),
+                pixel_delta_v: Vector3::default(),
+                u: Vector3::default(),
+                v: Vector3::default(),
+                w: Vector3::default(),
+            };
+
+            Ok(camera)
+        } else {
+            Err("Key 'camera' not found".into())
+        }
+    }
+
+    pub fn render(&mut self, world: &dyn Hittable, filename: String) {
         self.initialise();
 
-        let mut image_file = File::create("image.ppm").expect("file creation failed");
+        let mut image_file = File::create(filename + ".ppm").expect("file creation failed");
 
         println!(
             "P3\nImage width: {}\nImage height: {}\n255\n",

@@ -40,12 +40,12 @@ impl Hittable for Cylinder {
             let sqrt_d = discriminant.sqrt();
 
             let root = (-b - sqrt_d) / (2.0 * a);
-            if root < t.max && root > t.min {
+            if t.surrounds(root) {
                 roots.push(root);
             }
 
             let root = (-b + sqrt_d) / (2.0 * a);
-            if root < t.max && root > t.min {
+            if t.surrounds(root) {
                 roots.push(root);
             }
         } else {
@@ -90,15 +90,15 @@ impl Cylinder {
         }
     }
 
-    fn calculate_outward_normal(&self, point: Point3) -> Vector3 {
-        let distance = point.y() - self.center.y();
+    // fn calculate_outward_normal(&self, point: Point3) -> Vector3 {
+    //     let distance = point.y() - self.center.y();
 
-        if distance > 0.0 {
-            Vector3::new(0.0, 1.0, 0.0)
-        } else if distance < 0.0 {
-            Vector3::new(0.0, -1.0, 0.0)
-        } else {
-            Vector3::new(0.0, 0.0, 0.0)
-        }
-    }
+    //     if distance > 0.0 {
+    //         Vector3::new(0.0, 1.0, 0.0)
+    //     } else if distance < 0.0 {
+    //         Vector3::new(0.0, -1.0, 0.0)
+    //     } else {
+    //         Vector3::new(0.0, 0.0, 0.0)
+    //     }
+    // }
 }

@@ -19,9 +19,9 @@ impl Interval {
         Self { min: INFINITY, max: NEG_INFINITY }
     }
 
-    pub fn universe() -> Self {
-        Self { min: NEG_INFINITY, max: INFINITY }
-    }
+    // pub fn universe() -> Self {
+    //     Self { min: NEG_INFINITY, max: INFINITY }
+    // }
 
     pub fn contains(&self, x: f64) -> bool {
         self.min <= x && x <= self.max
@@ -51,5 +51,5 @@ impl Interval {
     }
 }
 
-const EMPTY_INTERVAL: Interval = Interval { min: INFINITY, max: NEG_INFINITY };
-const UNIVERSE_INTERVAL: Interval = Interval { min: NEG_INFINITY, max: INFINITY };
+// const EMPTY_INTERVAL: Interval = Interval { min: INFINITY, max: NEG_INFINITY };
+// const UNIVERSE_INTERVAL: Interval = Interval { min: NEG_INFINITY, max: INFINITY };

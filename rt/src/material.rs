@@ -28,7 +28,7 @@ impl Lambertian {
 impl Material for Lambertian {
     fn scatter(
         &self,
-        r_in: &Ray,
+        _: &Ray,
         rec: &HitRecord,
         attenuation: &mut Colour,
         scattered: &mut Ray

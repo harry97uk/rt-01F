@@ -1,8 +1,10 @@
 use std::ops::{ AddAssign, MulAssign, DivAssign, Add, Sub, Mul, Div, Neg };
 
+use serde::Deserialize;
+
 use crate::rtweekend::{ random_f64, random_f64_range };
 
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Deserialize)]
 pub struct Vector3 {
     e: [f64; 3],
 }
@@ -190,16 +192,16 @@ pub fn random_unit_vector() -> Vector3 {
     return unit_vector(random_in_unit_sphere());
 }
 
-pub fn random_on_hemisphere(normal: Vector3) -> Vector3 {
-    let on_unit_sphere = random_unit_vector();
-    if
-        dot(on_unit_sphere, normal) > 0.0 // In the same hemisphere as the normal
-    {
-        return on_unit_sphere;
-    } else {
-        return -on_unit_sphere;
-    }
-}
+// pub fn random_on_hemisphere(normal: Vector3) -> Vector3 {
+//     let on_unit_sphere = random_unit_vector();
+//     if
+//         dot(on_unit_sphere, normal) > 0.0 // In the same hemisphere as the normal
+//     {
+//         return on_unit_sphere;
+//     } else {
+//         return -on_unit_sphere;
+//     }
+// }
 
 pub fn reflect(v: Vector3, n: Vector3) -> Vector3 {
     return v - 2.0 * dot(v, n) * n;
